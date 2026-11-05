@@ -1,0 +1,66 @@
+{
+    "name": "TEST",
+    "members": [
+        "Bob",
+        "Jane"
+    ],
+    "locations": [
+        "Palace Nova",
+        "Capri",
+        "Bob's house"
+    ],
+    "tagline": "A moview club that meets each month",
+    "code": "food",
+    "sectionCaption": "meeting",
+    "thingCaption": "movie",
+    "sections": {
+        "20260515": {
+            "date": "15 May 2026",
+            "host": "0",
+            "location": "0",
+            "alt": "",
+            "things": [
+                {
+                    "title": "Facts about Fish",
+                    "by": "Bob Brown",
+                    "url": ""
+                },
+                {
+                    "title": "Bongo in the jungle",
+                    "by": "Tarzan",
+                    "url": ""
+                },
+                {
+                    "title": "Bingo through the years",
+                    "by": "Edward Monk",
+                    "url": "http:\/\/abc.com"
+                }
+            ]
+        },
+        "20260523": {
+            "date": "23 May 2026",
+            "host": "",
+            "location": "",
+            "alt": "AA",
+            "things": []
+        },
+        "20260617": {
+            "date": "17 Jun 2026",
+            "host": "",
+            "location": "",
+            "alt": "",
+            "things": []
+        },
+        "20260715": {
+            "date": "15 Jul 2026",
+            "host": "0",
+            "location": "1",
+            "alt": "",
+            "things": []
+        }
+    },
+    "nth": "2",
+    "day": "3",
+    "every": "0",
+    "unit": "1"
+}

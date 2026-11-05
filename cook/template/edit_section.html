@@ -1,0 +1,23 @@
+<form action="" method="post">
+  <input type="hidden" id="action" name="action" value="save" />
+  <input type="hidden" id="type" name="type" value="section" />
+  <input type="hidden" id="page" name="page" value="{{page}}" />
+  <input type="hidden" id="section" name="section" value="{{section}}" />
+  <label for="date">Date</label>
+  <input type="text" name="date" id="date" value="{{date}}" />
+  <label for="host">Host</label>
+  <select id="host" name="host">
+    {{hosts}}
+  </select>
+  <label for="location">Location</label>
+  <select id="location" name="location">
+    {{locations}}
+  </select>
+  <label for="alt">Alternate location</label>
+  <input type="text" id="alt" name="alt" value="{{alt}}" />  
+  {{things}}
+</form>
+<div class="button" onclick="addThing('{{section}}');">+ Add a new {{thingCaption}}</div>
+<div class="dialogbuttons">
+  {{buttons}}
+</div>

@@ -1,0 +1,21 @@
+{
+    "name": "Cook",
+    "short_name": "Cook",
+    "start_url": "/cook/",
+    "display": "standalone",
+    "background_color": "#1a1621",
+    "theme_color": "#1a1621",
+    "share_target": {
+        "action": "/incoming-share/",
+        "method": "GET",
+        "params": {
+        "title": "title",
+        "text": "text",
+        "url": "url"
+        }
+    },
+    "icons": [
+        { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+    ]
+}
