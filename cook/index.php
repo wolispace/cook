@@ -44,7 +44,9 @@ function formatSections($data) {
   foreach($data['sections'] as $sectionId => $section) {
     $section['sectionId'] = $sectionId;
     $section['template'] = 'section';
-    $section['tags'] = buildSubHtml($section['tags'], 'tags');
+    if (!empty($section['tags'])) {
+      $section['tags'] = buildSubHtml($section['tags'], 'tags');
+    }
     // $section = stripKeys($section, 'dateformat,members');
     $html .= buildHtml($section);
   }
@@ -283,14 +285,11 @@ function stripKeys($data, $keys) {
 
 function deleteSomething($params) {
   global $app;
-  $file = "{$app['pageFolder']}{$params['page']}.json";
-  $data = loadJson($file);
-  if (empty($data)) {
-    return ['error' => 'Page not found'];
-  }
+  $data = $app;
   unset($data['sections'][$params['section']]);
+  $file = '_data.json';
   saveJson($data, $file);
-  logIt("deleted {$params['page']} {$params['section']}");
+  logIt("deleted {section {$params['section']}");
   return ["status" => "ok"];
 }
 
