@@ -45,7 +45,7 @@ function formatSections($data) {
     $section['sectionId'] = $sectionId;
     $section['template'] = 'section';
     if (!empty($section['tags'])) {
-      $section['tags'] = buildSubHtml($section['tags'], 'tags');
+      $section['tags'] = buildTags($section['tags'], 'tag');
     }
     // $section = stripKeys($section, 'dateformat,members');
     $html .= buildHtml($section);
@@ -119,6 +119,10 @@ function buildTemplatePath($name) {
 }
 
 function renderTemplate($html, $params) {
+  if (!is_array($params)) {
+    logIt("renderTemplate: params is not an array: " . json_encode($params));
+    return $html;
+  }
   foreach ($params as $key => $value) {
     $html = str_replace("{{{$key}}}", $value, $html);
   }
@@ -193,6 +197,8 @@ function formatPage($data, $params) {
 function formatSection($section, $data, $params) {
   $section = array_merge($section, $params);
   $section['template'] = 'edit_section';
+
+  $section['tags'] = buildTags($section['tags']);
   $section = stripKeys($section, 'dateformat,members,sections');
   return $section;
 }
@@ -215,6 +221,19 @@ function buildButtons($buttons) {
     $html .= buildHtml($button);
   }
   return $html;
+}
+
+function buildTags($tags) {
+  $html = '';
+  if (!is_array($tags)) return html;
+  $params = [];
+  foreach($tags as $tag) {
+    $params['template'] = 'tag';
+    $params['tag'] = $tag;
+    $html .= buildHtml($params);
+  }
+  return $html;
+
 }
 
 function saveDataFromEditing($params) {
