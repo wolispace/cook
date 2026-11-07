@@ -70,7 +70,6 @@ a:hover {
   background-color: rgba(255, 255, 255, .15);
 }
 
-
 .imagebox {
   background-color: rgba(255, 255, 255, .15);
   padding: .5rem;
@@ -80,44 +79,12 @@ a:hover {
   justify-content: space-between;
 }
 
-.month {
-  font-size: 200%;
-  color: var(--font-color-bold);
-}
-
-.monthday {
-  font-size: 100%;
-  white-space: nowrap;
-}
-
-.host {
-  font-weight: bold;
-  color: var(--font-color-bold);
-
-}
-
-.thingbox {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.things {
-  padding-right: 2rem;
-  padding-left: .5rem;
-}
-
 .title {
   font-size: 130%;
   font-weight: bold;
   color: var(--font-color-bold);
   padding-top: .35rem;
   padding-bottom: .1rem;
-}
-
-.by {
-  color: var(--font-color-bold);
 }
 
 .externallink {
@@ -132,13 +99,6 @@ a:hover {
   cursor: pointer;
 }
 
-.location {
-  background-color: rgba(0, 0, 0, .3);
-  border-bottom-right-radius: 1rem;
-  border-bottom-left-radius: 1rem;
-  padding: .3rem .5rem;
-}
-
 .fas {
   text-shadow: .0 0 .5rem black;
 }
@@ -146,7 +106,6 @@ a:hover {
 .fas:hover {
   color: white;
 }
-
 
 .dialog {
   display: none;
@@ -238,12 +197,6 @@ form {
   display: flex;
   gap: .5rem;
   padding: 1rem;
-}
-
-.thing {
-  display: flex;
-  flex-direction: column;
-  padding: 1rem 0;
 }
 
 header {
