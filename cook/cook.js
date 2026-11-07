@@ -1,5 +1,5 @@
-const ZOOM_KEY = 'clubbing_zoom';
-const clubId = extractClubIdFromUrl();
+const ZOOM_KEY = 'cook_zoom';
+const pageId = extractPageIdFromUrl();
 
 // The show starts here
 document.addEventListener('DOMContentLoaded', async () => {
@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (saved) document.documentElement.style.fontSize = saved + 'px';
 });
 
-function extractClubIdFromUrl() {
+function extractPageIdFromUrl() {
   let queryParam = window.location.href;
-  return queryParam.replace(window.location.origin, '').replace('/clubbing/', '').replace('?', '');
+  return queryParam.replace(window.location.origin, '').replace('/cook/', '').replace('?', '');
 }
 
 async function editSection(section) {
@@ -36,7 +36,7 @@ async function editSection(section) {
       onclick: "closeDialog()",
     }
   ];
-  const params = {action: 'load', type: 'section', page: clubId, section: section, buttons: buttons}
+  const params = {action: 'load', type: 'section', page: pageId, section: section, buttons: buttons}
   const json = await getJson(params);
   showDialog(json.html);
 }
@@ -53,14 +53,14 @@ async function editPage() {
       onclick: "closeDialog()",
     }
   ];
-  const params = {action: 'load', type: 'page', page: clubId, buttons: buttons}
+  const params = {action: 'load', type: 'page', page: pageId, buttons: buttons}
   const json = await getJson(params);
   showDialog(json.html);
 }
 
 async function addThing(section) {
   const thingCount = document.querySelectorAll('.thing').length;
-  const params = {action: 'load', type: 'thing', page: clubId, section: section, id: thingCount};
+  const params = {action: 'load', type: 'thing', page: pageId, section: section, id: thingCount};
   const json = await getJson(params);
   const form = document.querySelector('form');
   form.insertAdjacentHTML('beforeend', json.html);
@@ -71,7 +71,7 @@ function showAll(yearsBack) {
   window.location = yearsBack >= 1 ? `${base}&all=${yearsBack}` : base;
 }
 
-function newClub() {
+function newPage() {
   editPage();
 }
 
@@ -119,7 +119,7 @@ async function deleteForm() {
     return;
   }
   const section = document.querySelector('#section').value;
-  const params = {action: 'delete', page: clubId, section: section};
+  const params = {action: 'delete', page: pageId, section: section};
   const json = await getJson(params);
   window.location.reload();
 }

@@ -3,36 +3,16 @@
   <input type="hidden" id="type" name="type" value="page" />
   <input type="hidden" id="oldpage" name="oldpage" value="{{page}}" />
   <label for="name">Name</label>
-  <input type="text" name="name" id="name" value="{{name}}" placeholder="The name of your club" autocomplete="off"/>
+  <input type="text" name="name" id="name" value="{{name}}" placeholder="The name of your page" autocomplete="off"/>
   <label for="page">Handle or acronym</label>
   <input type="text" name="page" id="page" value="{{page}}" placeholder="A word used in the url eg: 'rbw' used as /?rbw" />  
   <label for="tagline">Tagline</label>
-  <input type="text" name="tagline" id="tagline" placeholder="A short and pithy description of your club" value="{{tagline}}" />  
+  <input type="text" name="tagline" id="tagline" placeholder="A short and pithy description of your page" value="{{tagline}}" />  
   <label for="code">Code</label>
-  <input type="text" name="code" id="code" placeholder="Share this with club members" value="{{code}}" />  
-  <label for="sectionCaption">Name for events</label>
-  <input type="text" name="sectionCaption" id="sectionCaption" placeholder="event, meeting, gathering etc.." value="{{sectionCaption}}" />  
-  <label for="nth">Events occur every</label>
-  <div class="row row-gap">
-    <select id="nth" name="nth" class="small-select">
-      {{nths}}
-    </select>
-    <select id="day" name="day" class="small-select">
-      {{days}}
-    </select>
-    <select id="every" name="every" class="small-select">
-      {{everys}}
-    </select>
-    <select id="unit" name="unit" class="small-select">
-      {{units}}
-    </select>
-  </div>
-  <label for="thingCaption">Topic of the club</label>
-  <input type="text" name="thingCaption" id="thingCaption" placeholder="Link to a recipe" value="{{thingCaption}}" />  
-  <label for="members">Members</label>
-  <textarea id="members" name="members" placeholder="One member per line">{{members}}</textarea>
-  <label for="locations">Locations</label>
-  <textarea id="locations" name="locations" placeholder="One regularly used location per line">{{locations}}</textarea>  
+  <input type="text" name="code" id="code" placeholder="Share this with others who can edit your page" value="{{code}}" />
+  <label for="tags">Tags</label>
+  <textarea id="tags" name="tags" placeholder="Tags, one per line eg: Savory, Sweet, Breakfast">{{members}}</textarea>
+
 </form>
 <div class="dialogbuttons">
   {{buttons}}

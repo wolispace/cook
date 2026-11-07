@@ -20,77 +20,35 @@ print buildHtml($params);
 
 function pageParams($params) {
   global $app;
-  // page is the first param ?about etc.. Default page of blank is the 'home' page 
-  $params['page'] = $params['page'] ?? '';
-  // merge url params into our request
-  $params = array_merge($params, $_REQUEST); 
-  switch ($params['page']) {
-    case '': // no page so get homepage content
-      $params['content'] = formatClubList(getClubs());
-      $params['template'] = 'home';
-      $params['name'] = $app['name'];
-      $params['footer'] = '<div class="button" onclick="newClub()">Add your club</div>'; 
-      break;
-    // new case for each special page   
-    default: // page defined so get its content
-      $params['template'] = $params['template'] ?? 'page';
-      $params = getContent($params); 
-      $footerParams = ['template'=> 'footer', 'webroot' => $app['webRoot']];
-      $params['footer'] = buildHtml($footerParams);
-  };
-
+  // no pages, use all on home page
+  $params['template'] = 'home';
+  $params = getContent($params); 
+  $footerParams = ['template'=> 'footer', 'webroot' => $app['webRoot']];
+  $params['footer'] = buildHtml($footerParams);
+  $params['name'] = $app['name'];
   $params['version'] = rand(10, 99999);
   return $params;
 }
 
 function getContent($params) {
   global $app;
-  $file = "{$app['clubFolder']}{$params['page']}.json";
-  $data = loadJson($file);
-  $data = array_merge($params, $data);
-  if (empty($data)) {
-    $params['name'] = 'New club';
-    $params['acronym'] = 'NC';
-    $params['content'] = formatSections($data);
-    $params['pagebuttons'] = pageButtons($data);
-  } else {
-    $params['name'] = $data['name'];
-    $params['sectionCaption'] = $data['sectionCaption'];
-    $params['thingCaption'] = $data['thingCaption'];    
-    $params['content'] = formatSections($data);
-    $params['pagebuttons'] = pageButtons($data);
-  }
+  $params['content'] = formatSections($app);
+  $params['pagebuttons'] = pageButtons($app);
   return $params;
 }
 
-// $all: 0 = from today onwards, 1 = start of this year, 2+ = years back
 function formatSections($data) {
   global $app;
   $html = '<div class="sections">';
-  $startDate = date('Ymd');
-  if (!empty($data['all'])) {
-    // go back to the start of this year
-    $startDate = date('Y0101');
-    // go beck in years (if 2+ passed then we go back 1 year etc..)
-    $startDate = $startDate - ( ( (int)$data['all'] - 1) * 10000 );
-  }
-  // loop through the events and build them from html templates
+  // loop through the sections and build them from html templates
   foreach($data['sections'] as $sectionId => $section) {
-    if ($sectionId <= $startDate) {
-      continue;
-    }
     $section['sectionId'] = $sectionId;
     $section['template'] = 'section';
-    $section = buildDateBits($sectionId, $section);
-    $section['things'] = buildUrls($section['things']);
-    $section['things'] = buildSubHtml($section['things'], 'thing');
-    $section['host'] = getSelected($data['members'], $section['host']);
-    $section['location'] = getSelected($data['locations'], $section['location']);
-    $section['location'] = !empty($section['alt']) ? $section['alt'] : $section['location'];
-    $section = stripKeys($section, 'dateformat,members');
+    $section['tags'] = buildSubHtml($section['tags'], 'tags');
+    // $section = stripKeys($section, 'dateformat,members');
     $html .= buildHtml($section);
   }
-
+  $html .= pageButtons($app);
   $html .= '</div>';
   return $html;
 }
@@ -100,27 +58,14 @@ function pageButtons($data) {
   $buttons = [];
   $params = [
   'template' => 'page_button',
-  'sectionCaption' => $data['sectionCaption'],
-  'all' => $data['all']
-  ]; 
+  'sectionCaption' => $data['sectionCaption']
+  ];
 
-  if (empty($params['all'])) {
-    $params['onclick'] = 'editSection()'; 
-    $params['caption'] = "Add a new {$params['sectionCaption']}";
-    $html .= buildHtml($params);
-    $params['onclick'] = 'showAll(1)'; 
-    $params['caption'] = "Show whole year";
-    $html .= buildHtml($params);
-  } else {
-    $params['all']++;
-    $params['onclick'] = "showAll({$params['all']})"; 
-    $params['caption'] = "Show previous year";
-    $html .= buildHtml($params);
-    $params['onclick'] = "showAll(0)"; 
-    $params['caption'] = "Show current only";
-    $html .= buildHtml($params);
-  } 
-    return $html;
+  $params['onclick'] = 'editSection()'; 
+  $params['caption'] = "Add a new {$params['sectionCaption']}";
+  $html .= buildHtml($params);
+  
+  return $html;
 }
 
 function getSelected($list, $selected) {
@@ -128,15 +73,6 @@ function getSelected($list, $selected) {
     return '';
   }
   return $list[$selected];
-}
-
-function buildDateBits($ymd, $section) {
-  $date = DateTime::createFromFormat('Ymd', $ymd);
-  $dateBits = explode(' ', $date->format('D j M'));
-  $section['weekday'] = $dateBits[0];
-  $section['monthday'] = $dateBits[1];
-  $section['month'] = $dateBits[2];  
-  return $section;
 }
 
 
@@ -193,8 +129,8 @@ function handleData($data) {
   // logIt("handling json data: " . json_encode($data));
   $json = array();
   switch ($data['action'] ?? '') {
-    case 'clubList':
-      $json = getClubs();
+    case 'pageList':
+      $json = getPages();
       break;
     case 'load':
       $json = loadDataForEditing($data);
@@ -209,33 +145,12 @@ function handleData($data) {
   return $json;
 }
 
-function getClubs() {
-  global $app;
-  $clubs = [];
-  $files = glob("{$app['clubFolder']}*.json");
-  foreach($files as $file) {
-    $clubData = loadJson($file);
-    $clubId = str_replace([$app['clubFolder'] , '.json'], '', $file);
-    $clubs[$clubId] = ["name" => $clubData['name'], "tagline" => $clubData['tagline']];
-  }
-  return $clubs;
-}
-
-function formatClubList($clubs) {
-  $clubList = 'Club list: <ul>';
-  $clubList .= buildSubHtml($clubs, 'club_list');
-  $clubList .= '</ul>';
-  return $clubList;
-}
-
 function loadDataForEditing($params) {
- global $app;
-  $file = "{$app['clubFolder']}{$params['page']}.json";
-  $data = loadJson($file);
-  if (empty($data)) {
-    $data = [];
-  }
+  global $app;
+  $data = $app;
   $html = '';
+  logIt("Loading " . json_encode($params));
+  
   switch ($params['type']) {
     case 'page': 
       $data['template'] = 'edit_page';
@@ -247,17 +162,10 @@ function loadDataForEditing($params) {
       $html = buildHtml($data);
       break;
     case 'section':
-      if (!empty($params['section']) && !empty($data['sections'][$params['section']])) {
-        $section = $data['sections'][$params['section']];
-      } else {
-        $section = [];
-        // default section details like next date
-        $sectionKeys = array_keys($data['sections']);
-        $highestSection = array_pop($sectionKeys);
-        $highestSection = empty($highestSection) ? date('Ymd') : $highestSection;
-        $params['section'] = nextDate($highestSection, $data);
-      }
-      $section['section'] = $params['section'];       
+      $section = $data['sections'][$params['section']];
+      $section['section'] = $params['section'];
+      $params['buttons'] = buildButtons($params['buttons']);
+      logIt("section: " . json_encode($section['buttons']));     
       $section = formatSection($section, $data, $params);
       $html = buildHtml($section);
       break;
@@ -276,19 +184,12 @@ function loadDataForEditing($params) {
 }
 
 function formatPage($data, $params) {
-  $data['members'] = implode("\n", $data['members']);
-  $data['locations'] = implode("\n", $data['locations']);
+  $data['tags'] = implode("\n", $data['tags']);
   return $data;
 }
 
 function formatSection($section, $data, $params) {
   $section = array_merge($section, $params);
-  $section['thingCaption'] = $data['thingCaption'];
-  $section['date'] = fromYmd($params['section']);
-  $section['hosts'] = buildOptions($data['members'], $section['host']); 
-  $section['locations'] = buildOptions($data['locations'], $section['location']); 
-  $section['buttons'] = buildSubHtml($params['buttons'], 'dialog_button');
-  $section['things'] = buildSubHtml($section['things'], 'edit_thing');
   $section['template'] = 'edit_section';
   $section = stripKeys($section, 'dateformat,members,sections');
   return $section;
@@ -316,14 +217,8 @@ function buildButtons($buttons) {
 
 function saveDataFromEditing($params) {
   global $app;
-  $file = "{$app['clubFolder']}{$params['page']}.json";
-  $data = loadJson($file);
+  $data = $app;
   logIt("Saving " . json_encode($params));
-  if (empty($data)) {
-    $params['page'] = buildHandle($params);
-    $file = "{$app['clubFolder']}{$params['page']}.json";
-    $data = [];
-  }
   switch ($params['type']) {
   case 'page':
     $data = array_merge($data, $params);
@@ -332,19 +227,19 @@ function saveDataFromEditing($params) {
     $data = stripKeys($data,"{$params['page']},test,action,type,page");
     break;
   case 'section':
-    $oldSectionId = $params['section'];
-    $newSectionId = toYmd($params['date']);
-    // remove old section
-    unset($data['sections'][$oldSectionId]);
-    $params['things'] = removeBlankThings($params['things']);
+    $key = $params['section'];
+    if (empty($key)) {
+       $key = uniqid();
+    }
     $params = stripKeys($params,"{$params['page']},test,action,type,page,section");
     // add new section
-    $data['sections'][$newSectionId] = $params;
+    $data['sections'][$key] = $params;
     break;
   default:
     return ["status" => "nothing to save"];;
   };
 
+  $file = '_data.json';
   saveJson($data, $file);
   return ["status" => "ok"];
 }
@@ -355,10 +250,10 @@ function buildHandle($params) {
   if (empty($params['oldpage'])) {
     // new so make sure its not clashing..
     $counter = 0;
-    $file = "{$app['clubFolder']}{$page}.json";
+    $file = "{$app['pageFolder']}{$page}.json";
     while (file_exists($file)) {
       $counter++;
-      $file = "{$app['clubFolder']}{$page}{$counter}.json";
+      $file = "{$app['pageFolder']}{$page}{$counter}.json";
     }
     return "{$page}{$counter}";
   } else {
@@ -388,10 +283,10 @@ function stripKeys($data, $keys) {
 
 function deleteSomething($params) {
   global $app;
-  $file = "{$app['clubFolder']}{$params['page']}.json";
+  $file = "{$app['pageFolder']}{$params['page']}.json";
   $data = loadJson($file);
   if (empty($data)) {
-    return ['error' => 'Club not found'];
+    return ['error' => 'Page not found'];
   }
   unset($data['sections'][$params['section']]);
   saveJson($data, $file);
