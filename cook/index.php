@@ -39,7 +39,9 @@ function getContent($params) {
 
 function formatSections($data) {
   global $app;
-  $html = '<div class="sections">';
+  // work out which filters are enabled
+  $html = getFilterTags($data);
+  $html .= '<div class="sections">';
   // loop through the sections and build them from html templates
   foreach($data['sections'] as $sectionId => $section) {
     $section['sectionId'] = $sectionId;
@@ -48,6 +50,19 @@ function formatSections($data) {
     $html .= buildHtml($section);
   }
   $html .= pageButtons($app);
+  $html .= '</div>';
+  return $html;
+}
+
+function getFilterTags($data) {
+  $html = '<div class="filtertags">';
+  $params = [];
+  $filter = [];
+  logIt('filter = ' . $_REQUEST['filter']);
+  if ($_REQUEST['filter']) {
+    $filter = explode(',', $_REQUEST['filter']);
+  }
+  $html .= buildEditTags($filter, 'filter');
   $html .= '</div>';
   return $html;
 }
@@ -233,9 +248,10 @@ function buildTags($tags) {
 
 }
 
-function buildEditTags ($selectedtags) {
+function buildEditTags($selectedtags, $click) {
   global $app;
   $html = '';
+  logIt('selected tags', json_encode($selectedtags));
   // loop throuhg all tags from app['tags']
   $params = [];
   $params['template'] = 'edit_tag';
@@ -243,6 +259,11 @@ function buildEditTags ($selectedtags) {
     $params['checked'] = (in_array($tag, $selectedtags)) ? 'checked' : '';
     //$params['selected'] = 'selected';
     $params['tag'] = $tag;
+    $params['click'] = 'blank';
+    if (!empty($click)) {
+      $params['click'] = "onclick=\"filter('{$tag}')\"";
+    }
+    // = empty($click) ? '' : $click; // ` Y onclick="filter('{$tag}')"`;
     $html .= buildHtml($params);
   }
   return $html;

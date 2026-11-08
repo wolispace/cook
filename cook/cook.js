@@ -124,8 +124,6 @@ async function deleteForm() {
   window.location.reload();
 }
 
-
-
 function zoom(amount) {
   const current = parseFloat(getComputedStyle(document.documentElement).fontSize);
   const newSize = Math.min(Math.max(current + amount, 12), 32);
@@ -133,3 +131,22 @@ function zoom(amount) {
   localStorage.setItem(ZOOM_KEY, newSize);
   window.scrollTo({top: document.body.scrollHeight});
 }
+
+function filter(tag) {
+  const TAGS = 'cook_tags';
+  const stored = localStorage.getItem(TAGS) ?? '';
+  const tags = stored ? stored.split(',') : [];
+
+  const idx = tags.indexOf(tag);
+  if (idx > -1) {
+    tags.splice(idx, 1);
+  } else {
+    tags.push(tag);
+  }
+
+  const csv = tags.join(',');
+  localStorage.setItem(TAGS, csv);
+
+  window.location.href = csv ? `./?filter=${csv}` : './';
+}
+

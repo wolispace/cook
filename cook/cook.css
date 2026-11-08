@@ -90,6 +90,24 @@ a:hover {
   color: white;
 }
 
+.filtertags {
+  padding: 1rem 0 .3rem 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: .25rem;
+}
+
+.filtertags label {
+  padding: 0 .5rem 0 0;
+  border-radius: .3rem;
+  background-color: rgba(255, 255, 255, .15);
+}
+
+.filtertags label:has(input:checked) {
+  background-color: rgba(255, 255, 255, .35);
+  color: white;
+}
 .imagebox {
   background-color: rgba(255, 255, 255, .15);
   padding: .5rem;
