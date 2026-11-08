@@ -43,7 +43,17 @@ function formatSections($data) {
   $html = getFilterTags($data);
   $html .= '<div class="sections">';
   // loop through the sections and build them from html templates
+  // if any of the $section['tags'] match the filter, then show it
+  $filter = [];
+  if ($_REQUEST['filter']) {
+    $filter = explode(',', $_REQUEST['filter']);
+  }
+
   foreach($data['sections'] as $sectionId => $section) {
+    if (count($filter) > 0 && count(array_intersect($filter, $section['tags'])) !== count($filter)) {
+      continue;
+    }
+
     $section['sectionId'] = $sectionId;
     $section['template'] = 'section';
     $section['tags'] = empty($section['tags']) ? '' : buildTags($section['tags'], 'tag');
@@ -58,7 +68,6 @@ function getFilterTags($data) {
   $html = '<div class="filtertags">';
   $params = [];
   $filter = [];
-  logIt('filter = ' . $_REQUEST['filter']);
   if ($_REQUEST['filter']) {
     $filter = explode(',', $_REQUEST['filter']);
   }
@@ -251,7 +260,6 @@ function buildTags($tags) {
 function buildEditTags($selectedtags, $click) {
   global $app;
   $html = '';
-  logIt('selected tags', json_encode($selectedtags));
   // loop throuhg all tags from app['tags']
   $params = [];
   $params['template'] = 'edit_tag';
@@ -381,7 +389,6 @@ function handleUrl($params) {
   if (empty($params['url'])) return $params;
   $content = fetchUrl($params['url']);
   $params['title'] = matchFirst('/<title>(.+?)<\/title>/i', $content);
-  logIt($params['title']);
   $params['image'] = matchFirst('/<meta[^>]+property=["\']og:image["\'][^>]+content=["\'](.*?)["\']/i', $content)
     ?: matchFirst('/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\'](.*?)["\']/i', $content)
     ?: matchFirst('/"image"\s*:\s*"([^"]+)"/i', $content);
