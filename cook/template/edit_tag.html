@@ -1,4 +1,3 @@
-<label for="{{id}}">
-  <input type="checkbox" id="{{id}}" name="{{id}}" onclick="toggleTag('{{id}}')">
-  {{tag}}
-</label>
+<label for="{{tag}}" class="{{checked}}"><input type="checkbox" 
+  id="{{tag}}" name="tags[{{tag}}]" {{checked}}
+  onclick="toggleTag('{{tag}}')">{{tag}}</label>

@@ -171,7 +171,7 @@ function loadDataForEditing($params) {
       $section = $data['sections'][$params['section']];
       $section['section'] = $params['section'];
       $params['buttons'] = buildButtons($params['buttons']);
-      logIt("section: " . json_encode($section['buttons']));     
+      $params['edittags'] = buildEditTags($section['tags']);   
       $section = formatSection($section, $data, $params);
       $html = buildHtml($section);
       break;
@@ -225,15 +225,30 @@ function buildButtons($buttons) {
 
 function buildTags($tags) {
   $html = '';
-  if (!is_array($tags)) return html;
+  if (!is_array($tags)) return $html;
   $params = [];
+  $params['template'] = 'tag';
   foreach($tags as $tag) {
-    $params['template'] = 'tag';
     $params['tag'] = $tag;
     $html .= buildHtml($params);
   }
   return $html;
 
+}
+
+function buildEditTags ($selectedtags) {
+  global $app;
+  $html = '';
+  // loop throuhg all tags from app['tags']
+  $params = [];
+  $params['template'] = 'edit_tag';
+  foreach($app['tags'] as $tag) {
+    $params['checked'] = (in_array($tag, $selectedtags)) ? 'checked' : '';
+    //$params['selected'] = 'selected';
+    $params['tag'] = $tag;
+    $html .= buildHtml($params);
+  }
+  return $html;
 }
 
 function saveDataFromEditing($params) {
@@ -252,6 +267,18 @@ function saveDataFromEditing($params) {
     if (empty($key)) {
        $key = uniqid();
     }
+    // convert assoc array into string array
+    $tagarray = [];
+    foreach ($params['tags'] as $tag=>$value) {
+      $tagarray[] = $tag;
+    }
+    $params['tags'] = $tagarray;
+    if (!empty($params['newtags'])) {
+      $newtags = explode(' ', $params['newtags']);
+      $params['tags'] = array_merge($newtags, $tagarray);
+      $data['tags'] = array_unique(array_merge($data['tags'], $newtags));
+    }
+
     $params = stripKeys($params,"{$params['page']},test,action,type,page,section");
     // add new section
     $data['sections'][$key] = $params;
