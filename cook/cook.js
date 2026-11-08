@@ -131,6 +131,5 @@ function zoom(amount) {
   const newSize = Math.min(Math.max(current + amount, 12), 32);
   document.documentElement.style.fontSize = newSize + 'px';
   localStorage.setItem(ZOOM_KEY, newSize);
-  setTimeout(window.scrollTo({ bottom: 0, behavior: 'smooth' }, 500));
-  
+  window.scrollTo({top: document.body.scrollHeight});
 }

@@ -44,10 +44,7 @@ function formatSections($data) {
   foreach($data['sections'] as $sectionId => $section) {
     $section['sectionId'] = $sectionId;
     $section['template'] = 'section';
-    if (!empty($section['tags'])) {
-      $section['tags'] = buildTags($section['tags'], 'tag');
-    }
-    // $section = stripKeys($section, 'dateformat,members');
+    $section['tags'] = empty($section['tags']) ? '' : buildTags($section['tags'], 'tag');
     $html .= buildHtml($section);
   }
   $html .= pageButtons($app);
@@ -225,7 +222,7 @@ function buildButtons($buttons) {
 
 function buildTags($tags) {
   $html = '';
-  if (!is_array($tags)) return $html;
+  if (!is_array($tags) || count($tags) < 1) return $html;
   $params = [];
   $params['template'] = 'tag';
   foreach($tags as $tag) {
@@ -279,7 +276,7 @@ function saveDataFromEditing($params) {
       $data['tags'] = array_unique(array_merge($data['tags'], $newtags));
     }
 
-    $params = stripKeys($params,"{$params['page']},test,action,type,page,section");
+    $params = stripKeys($params, "newtags,test,action,type,page,section");
     // add new section
     $data['sections'][$key] = $params;
     break;
