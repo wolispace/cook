@@ -1,6 +1,7 @@
 {
     "name": "Cook",
     "short_name": "Cook",
+    "id": "com.wolispace.cook",
     "start_url": "/cook/",
     "display": "standalone",
     "background_color": "#1a1621",
