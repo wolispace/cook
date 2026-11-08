@@ -278,7 +278,9 @@ function saveDataFromEditing($params) {
 
     $params = stripKeys($params, "newtags,test,action,type,page,section");
     // add new section
+    $params = handleUrl($params);
     $data['sections'][$key] = $params;
+
     break;
   default:
     return ["status" => "nothing to save"];;
@@ -336,7 +338,38 @@ function deleteSomething($params) {
   return ["status" => "ok"];
 }
 
+function fetchUrl($url) {
+  $ch = curl_init($url);
+  curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_SSL_VERIFYPEER => false,
+    CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  ]);
+  $content = curl_exec($ch);
+  curl_close($ch);
+  return $content;
+}
+
+
+function matchFirst($pattern, $content) {
+  return preg_match($pattern, $content, $m) ? $m[1] : null;
+}
+
+function handleUrl($params) {
+  if (empty($params['url'])) return $params;
+  $content = fetchUrl($params['url']);
+  $params['title'] = matchFirst('/<title>(.+?)<\/title>/i', $content);
+  logIt($params['title']);
+  $params['image'] = matchFirst('/<meta[^>]+property=["\']og:image["\'][^>]+content=["\'](.*?)["\']/i', $content)
+    ?: matchFirst('/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\'](.*?)["\']/i', $content)
+    ?: matchFirst('/"image"\s*:\s*"([^"]+)"/i', $content);
+  
+  return $params;
+}
+
 // utilities ----------------------------------
+
 
 function toYmd($str) {
   foreach (['d M Y', 'd/m/Y', 'd-m-Y'] as $format) {
