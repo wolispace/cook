@@ -37,6 +37,14 @@ function getContent($params) {
   return $params;
 }
 
+function getUrlFilters() {
+  $filter = [];
+  if (isset($_REQUEST['filter'])) {
+    $filter = explode(',', $_REQUEST['filter']);
+  }
+  return $filter;
+}
+
 function formatSections($data) {
   global $app;
   // work out which filters are enabled
@@ -44,10 +52,7 @@ function formatSections($data) {
   $html .= '<div class="sections">';
   // loop through the sections and build them from html templates
   // if any of the $section['tags'] match the filter, then show it
-  $filter = [];
-  if ($_REQUEST['filter']) {
-    $filter = explode(',', $_REQUEST['filter']);
-  }
+  $filter = getUrlFilters();
 
   foreach($data['sections'] as $sectionId => $section) {
     if (count($filter) > 0 && count(array_intersect($filter, $section['tags'])) !== count($filter)) {
@@ -67,10 +72,8 @@ function formatSections($data) {
 function getFilterTags($data) {
   $html = '<div class="filtertags">';
   $params = [];
-  $filter = [];
-  if ($_REQUEST['filter']) {
-    $filter = explode(',', $_REQUEST['filter']);
-  }
+  $filter = getUrlFilters();
+  
   $html .= buildEditTags($filter, 'filter');
   $html .= '</div>';
   return $html;
@@ -257,7 +260,7 @@ function buildTags($tags) {
 
 }
 
-function buildEditTags($selectedtags, $click) {
+function buildEditTags($selectedtags, $click = '') {
   global $app;
   $html = '';
   // loop throuhg all tags from app['tags']
