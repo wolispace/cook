@@ -73,7 +73,7 @@ function getFilterTags($data) {
   $html = '<div class="filtertags">';
   $params = [];
   $filter = getUrlFilters();
-  
+
   $html .= buildEditTags($filter, 'filter');
   $html .= '</div>';
   return $html;
@@ -192,8 +192,14 @@ function loadDataForEditing($params) {
       $html = buildHtml($data);
       break;
     case 'section':
-      $section = $data['sections'][$params['section']];
-      $section['section'] = $params['section'];
+      if (isset($params['section'])) {
+        $section = $data['sections'][$params['section']];
+      } else {
+        $section = [];
+      }
+      if (!isset($section['tags'])) {
+        $section['tags'] = [];
+      }
       $params['buttons'] = buildButtons($params['buttons']);
       $params['edittags'] = buildEditTags($section['tags']);   
       $section = formatSection($section, $data, $params);
@@ -270,7 +276,7 @@ function buildEditTags($selectedtags, $click = '') {
     $params['checked'] = (in_array($tag, $selectedtags)) ? 'checked' : '';
     //$params['selected'] = 'selected';
     $params['tag'] = $tag;
-    $params['click'] = 'blank';
+    $params['click'] = '';
     if (!empty($click)) {
       $params['click'] = "onclick=\"filter('{$tag}')\"";
     }
@@ -298,8 +304,10 @@ function saveDataFromEditing($params) {
     }
     // convert assoc array into string array
     $tagarray = [];
-    foreach ($params['tags'] as $tag=>$value) {
-      $tagarray[] = $tag;
+    if (isset($params['tags'])) {
+      foreach ($params['tags'] as $tag=>$value) {
+        $tagarray[] = $tag;
+      }
     }
     $params['tags'] = $tagarray;
     if (!empty($params['newtags'])) {
@@ -376,7 +384,7 @@ function fetchUrl($url) {
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_FOLLOWLOCATION => true,
     CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'],
   ]);
   $content = curl_exec($ch);
   curl_close($ch);
@@ -388,13 +396,25 @@ function matchFirst($pattern, $content) {
   return preg_match($pattern, $content, $m) ? $m[1] : null;
 }
 
+/**
+ * Fetch the page and extract title and image if we dont already have that info
+ */
 function handleUrl($params) {
   if (empty($params['url'])) return $params;
+  // no point fetching url if we dont need anything from it
+  if (!empty($params['title']) && !empty($params['image'])) return $params;
+  
   $content = fetchUrl($params['url']);
-  $params['title'] = matchFirst('/<title>(.+?)<\/title>/i', $content);
-  $params['image'] = matchFirst('/<meta[^>]+property=["\']og:image["\'][^>]+content=["\'](.*?)["\']/i', $content)
-    ?: matchFirst('/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\'](.*?)["\']/i', $content)
-    ?: matchFirst('/"image"\s*:\s*"([^"]+)"/i', $content);
+  //logIt($content);
+  if (empty($params['title'])) {
+    $params['title'] = matchFirst('/<title>(.+?)<\/title>/i', $content);
+  }
+  if (empty($params['image'])) {
+    $params['image'] = matchFirst('/<meta[^>]+property=["\']og:image["\'][^>]+content=["\'](.*?)["\']/i', $content)
+      ?: matchFirst('/<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\'](.*?)["\']/i', $content)
+      ?: matchFirst('/"image"\s*:\s*"([^"]+)"/i', $content)
+      ?: "http://wolispace.com/html/documents/pictures/food/take%20a%20nice%20lemon.jpg";
+  }
   
   return $params;
 }

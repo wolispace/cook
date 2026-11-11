@@ -1,4 +1,4 @@
-const SW_VERSION = 1;
+const SW_VERSION = 2;
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', () => {});
-self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
+self.addEventListener('activate', () => self.clients.claim());
+

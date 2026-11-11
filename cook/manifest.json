@@ -7,8 +7,9 @@
     "background_color": "#1a1621",
     "theme_color": "#1a1621",
     "share_target": {
-        "action": "/incoming-share/",
+        "action": "/cook/",
         "method": "GET",
+        "enctype": "application/x-www-form-urlencoded",
         "params": {
         "title": "title",
         "text": "text",
