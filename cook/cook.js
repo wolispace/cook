@@ -1,10 +1,16 @@
 const ZOOM_KEY = 'cook_zoom';
+const PAGE_SIZE = 20;
 const pageId = extractPageIdFromUrl();
+
+let allSections = [];   // full list fetched from server
+let renderedCount = 0;  // how many we've put in the DOM
+let isLoading = false;
+let observer = null;
 
 // The show starts here
 document.addEventListener('DOMContentLoaded', async () => {
 
-  const parsedUrl = new URL(window.location);  
+  const parsedUrl = new URL(window.location);
   // Extract parameters mapped in manifest.json
   const sharedTitle = parsedUrl.searchParams.get('title');
   const sharedText = parsedUrl.searchParams.get('text');
@@ -12,12 +18,104 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (sharedUrl) {
     console.log("Received a shared URL:", sharedUrl);
-    // Process the URL (e.g., save it to a list, display it, etc.)
   }
 
   const saved = localStorage.getItem(ZOOM_KEY);
   if (saved) document.documentElement.style.fontSize = saved + 'px';
+
+  await initSections();
 });
+
+// ---- Infinite scroll / lazy render ----------------------------------------
+
+async function initSections() {
+  const container = document.querySelector('.sections');
+  if (!container) return;
+
+  const filter = container.dataset.filter || '';
+
+  // Fetch the full (lightweight) sections list from the server
+  const params = { action: 'sections', filter };
+  const json = await getJson(params);
+  allSections = json.sections || [];
+  renderedCount = 0;
+
+  // Render first batch
+  renderNextBatch(container);
+
+  // Set up sentinel for infinite scroll
+  setupIntersectionObserver(container);
+}
+
+function renderNextBatch(container) {
+  if (isLoading) return;
+  const slice = allSections.slice(renderedCount, renderedCount + PAGE_SIZE);
+  if (slice.length === 0) return;
+
+  isLoading = true;
+  slice.forEach(section => {
+    container.insertAdjacentHTML('beforeend', buildSectionHtml(section));
+  });
+  renderedCount += slice.length;
+  isLoading = false;
+}
+
+function buildSectionHtml(s) {
+  const tags = (s.tags || []).map(t => `<span>${t}</span>`).join('');
+  const tagsHtml = tags ? `<div class="tags">${tags}</div>` : '<div class="tags"></div>';
+  return `
+<section class="section">
+  <div class="row">
+    <div class="imagebox">
+      <img src="${escHtml(s.image)}" loading="lazy" />
+    </div>
+    <div class="thingbox">
+      <div>
+        <a href="${escHtml(s.url)}" target="_blank">
+          <span class="title">${escHtml(s.title)}</span>
+        </a>
+      </div>
+      <div>${escHtml(s.description)}</div>
+    </div>
+  </div>
+  ${tagsHtml}
+  <div class="edit" onclick="editSection('${escHtml(s.id)}')"><i class="fas fa-pencil"></i></div>
+</section>`;
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function setupIntersectionObserver(container) {
+  // Create a small sentinel div at the bottom
+  const sentinel = document.createElement('div');
+  sentinel.className = 'scroll-sentinel';
+  container.after(sentinel);
+
+  observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        renderNextBatch(container);
+        // Stop observing if we've rendered everything
+        if (renderedCount >= allSections.length) {
+          observer.disconnect();
+          sentinel.remove();
+        }
+      }
+    });
+  }, { rootMargin: '200px' });
+
+  observer.observe(sentinel);
+}
+
+// ---- Existing functions ----------------------------------------------------
 
 function extractPageIdFromUrl() {
   let queryParam = window.location.href;
@@ -26,41 +124,47 @@ function extractPageIdFromUrl() {
 
 async function editSection(section) {
   const buttons = [
-    {caption: "Delete", 
+    {
+      caption: "Delete",
       onclick: "deleteForm()",
     },
-    {caption: "Save", 
+    {
+      caption: "Save",
       onclick: "saveForm()",
     },
-    {caption: "Cancel", 
+    {
+      caption: "Cancel",
       onclick: "closeDialog()",
     }
   ];
-  const params = {action: 'load', type: 'section', page: pageId, section: section, buttons: buttons}
+  const params = { action: 'load', type: 'section', page: pageId, section: section, buttons: buttons }
   const json = await getJson(params);
   showDialog(json.html);
 }
 
 async function editPage() {
   const buttons = [
-    {caption: "Delete", 
+    {
+      caption: "Delete",
       onclick: "deleteForm()",
     },
-    {caption: "Save", 
+    {
+      caption: "Save",
       onclick: "saveForm()",
     },
-    {caption: "Cancel", 
+    {
+      caption: "Cancel",
       onclick: "closeDialog()",
     }
   ];
-  const params = {action: 'load', type: 'page', page: pageId, buttons: buttons}
+  const params = { action: 'load', type: 'page', page: pageId, buttons: buttons }
   const json = await getJson(params);
   showDialog(json.html);
 }
 
 async function addThing(section) {
   const thingCount = document.querySelectorAll('.thing').length;
-  const params = {action: 'load', type: 'thing', page: pageId, section: section, id: thingCount};
+  const params = { action: 'load', type: 'thing', page: pageId, section: section, id: thingCount };
   const json = await getJson(params);
   const form = document.querySelector('form');
   form.insertAdjacentHTML('beforeend', json.html);
@@ -76,11 +180,11 @@ function newPage() {
 }
 
 async function getJson(params) {
-    moveOverlay(4);
-    const response = await fetch(`?j=${JSON.stringify(params)}`);
-    const result = await response.json();
-    moveOverlay(2);
-    return result;
+  moveOverlay(4);
+  const response = await fetch(`?j=${JSON.stringify(params)}`);
+  const result = await response.json();
+  moveOverlay(2);
+  return result;
 }
 
 function showDialog(html) {
@@ -119,7 +223,7 @@ async function deleteForm() {
     return;
   }
   const section = document.querySelector('#section').value;
-  const params = {action: 'delete', page: pageId, section: section};
+  const params = { action: 'delete', page: pageId, section: section };
   const json = await getJson(params);
   window.location.reload();
 }
@@ -129,7 +233,7 @@ function zoom(amount) {
   const newSize = Math.min(Math.max(current + amount, 12), 32);
   document.documentElement.style.fontSize = newSize + 'px';
   localStorage.setItem(ZOOM_KEY, newSize);
-  window.scrollTo({top: document.body.scrollHeight});
+  window.scrollTo({ top: document.body.scrollHeight });
 }
 
 function filter(tag) {
@@ -149,4 +253,3 @@ function filter(tag) {
 
   window.location.href = csv ? `./?filter=${csv}` : './';
 }
-

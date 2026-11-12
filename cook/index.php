@@ -47,25 +47,11 @@ function getUrlFilters() {
 
 function formatSections($data) {
   global $app;
-  // work out which filters are enabled
   $html = getFilterTags($data);
-  $html .= '<div class="sections">';
-  // loop through the sections and build them from html templates
-  // if any of the $section['tags'] match the filter, then show it
   $filter = getUrlFilters();
-
-  foreach($data['sections'] as $sectionId => $section) {
-    if (count($filter) > 0 && count(array_intersect($filter, $section['tags'])) !== count($filter)) {
-      continue;
-    }
-
-    $section['sectionId'] = $sectionId;
-    $section['template'] = 'section';
-    $section['tags'] = empty($section['tags']) ? '' : buildTags($section['tags'], 'tag');
-    $html .= buildHtml($section);
-  }
+  $filterAttr = htmlspecialchars(implode(",", $filter));
+  $html .= "<div class=\"sections\" data-filter=\"{$filterAttr}\"></div>";
   $html .= pageButtons($app);
-  $html .= '</div>';
   return $html;
 }
 
@@ -171,6 +157,9 @@ function handleData($data) {
     case 'delete':
       $json = deleteSomething($data);
       break;     
+    case 'sections':
+      $json = getSectionsJson($data);
+      break;
   };
   return $json;
 }
@@ -376,6 +365,29 @@ function deleteSomething($params) {
   saveJson($data, $file);
   logIt("deleted {section {$params['section']}");
   return ["status" => "ok"];
+}
+
+function getSectionsJson($params) {
+  global $app;
+  $filter = [];
+  if (!empty($params['filter'])) {
+    $filter = explode(',', $params['filter']);
+  }
+  $sections = [];
+  foreach ($app['sections'] as $id => $section) {
+    if (count($filter) > 0 && count(array_intersect($filter, $section['tags'] ?? [])) !== count($filter)) {
+      continue;
+    }
+    $sections[] = [
+      'id'          => $id,
+      'title'       => $section['title'] ?? '',
+      'url'         => $section['url'] ?? '',
+      'image'       => $section['image'] ?? '',
+      'description' => $section['description'] ?? '',
+      'tags'        => $section['tags'] ?? [],
+    ];
+  }
+  return ['sections' => $sections];
 }
 
 function fetchUrl($url) {
