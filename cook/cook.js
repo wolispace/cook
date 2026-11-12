@@ -37,7 +37,7 @@ async function initSections() {
   // Fetch the full (lightweight) sections list from the server
   const params = { action: 'sections', filter };
   const json = await getJson(params);
-  allSections = json.sections || [];
+  allSections = shuffle(json.sections || []);
   renderedCount = 0;
 
   // Render first batch
@@ -113,6 +113,15 @@ function setupIntersectionObserver(container) {
   }, { rootMargin: '200px' });
 
   observer.observe(sentinel);
+}
+
+// Fisher-Yates shuffle — mutates and returns the array
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
 // ---- Existing functions ----------------------------------------------------
